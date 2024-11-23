@@ -1,0 +1,23 @@
+{
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "express-session": "^1.18.1",
+    "moment": "^2.30.1",
+    "mysql2": "^3.11.4",
+    "nodemon": "^3.1.7",
+    "socket.io": "^4.8.1",
+    "ws": "^8.18.0"
+  },
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "name": "rummy",
+  "version": "1.0.0",
+  "main": "server.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
