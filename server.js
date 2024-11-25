@@ -1,8 +1,8 @@
+const http = require('http');
 const app = require("./app");
+const initWebSocketServer = require("./webSocketServer");
 require('dotenv').config();
 const port = process.env.PORT || 3000;
-const http = require('http');
-const initWebSocketServer = require("./webSocketServer");
 
 const server = http.createServer(app);
 initWebSocketServer(server);
