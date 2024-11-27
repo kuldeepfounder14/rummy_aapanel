@@ -6,11 +6,11 @@ const Player = {
     },
     getPlayersInRoom: async (roomId) => {
         const [rows] = await db.query("SELECT * FROM players WHERE room_id = ?", [roomId]);
-        console.log("rowrowrow",rows)
+        // console.log("rowrowrow",rows)
         return rows;
     },
     updateTurn: async (roomId, playerId, isTurn) => {
-        await db.query("UPDATE players SET is_turn = ? WHERE room_id = ? AND user_id = ?", [isTurn, roomId, playerId]);
+        await db.query("UPDATE players SET is_turn = ? WHERE room_id = ? AND user_id = ?", [isTurn, roomId, playerId.user_id]);
     },
     getPlayerTurnStatus: async (roomId, playerId) => {
         console.log("roomId, playerId",roomId, playerId)

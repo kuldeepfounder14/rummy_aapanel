@@ -3,6 +3,14 @@ const Player = require("../models/playerModel");
 const GameController = require("../controllers/gameController");
 const WebSocket = require("ws");
 
+const broadcastToRoom = (wss, roomId, message) => {
+    // console.log("broadcastToRoombroadcastToRoom",wss.clients,roomId,message)
+    wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN && client.roomId === roomId) {
+            client.send(JSON.stringify(message));
+        }
+    });
+};
 const RoomController = {
     joinRoomSocket: async (userId, gameId, wss, ws) => {
         const userDetails = await Room.getUserDetails(userId);
@@ -20,9 +28,10 @@ const RoomController = {
         }
 
         let room = await Room.findWaitingRoom(gameId, player_size);
+        // console.log("rooomrroom room ",room)
         if (!room) {
             const roomId = await Room.create(gameId);
-            room = { id: roomId, status: "waiting" };
+            room = { id: roomId,username:userDetails.username, status: "waiting" };
 
             const timer = setTimeout(async () => {
                 const players = await Player.getPlayersInRoom(roomId);
@@ -32,12 +41,9 @@ const RoomController = {
                     Room.clearRoomTimer(roomId);
 
                     // Notify all clients
-                    wss.clients.forEach((client) => {
-                        if (client.readyState === WebSocket.OPEN) {
-                            client.send(
-                                JSON.stringify({ event: "roomDestroyed", payload: { roomId } })
-                            );
-                        }
+                    broadcastToRoom(wss, roomId, {
+                        event: "roomUpdate",
+                        payload: { roomId,roomStatus:0 },
                     });
                 }
             }, 60000);
@@ -47,25 +53,50 @@ const RoomController = {
 
         await Player.addToRoom(userId, room.id, gameId);
         const players = await Player.getPlayersInRoom(room.id);
-
+console.log("Playerplayer",players)
+          const enrichedPlayers = await Promise.all(
+        players.map(async (player) => {
+            const user = await Room.getUserDetails(player.user_id);
+            return {
+                ...player,
+                username: user ? user.username : null, 
+            };
+        })
+    );
         // Step 1: Send room update first, before toss and card distribution
-        wss.clients.forEach((client) => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(
-                    JSON.stringify({ event: "roomUpdate", payload: { roomId: room.id, players } })
-                );
-            }
+          ws.roomId = room.id;
+         broadcastToRoom(wss, room.id, {
+            event: "roomUpdate",
+            payload: { roomId: room.id,roomStatus:1, players:enrichedPlayers},
         });
-
         if (players.length === player_size) {
-            // Step 2: Proceed with toss and card distribution after room update
-            await GameController.handleTossSocket(room.id, toss_decider_card, wss);
-            await Room.updateStatus(room.id, "active");
-            await Room.deductWalletBalance(room.id, entry_fees);
-            await Room.setStartTime(room.id);
-            Room.clearRoomTimer(room.id);
-        }
+            let countdown = 5;
+            const interval = setInterval(async () => {
+                if (countdown > 0) {
+                    broadcastToRoom(wss, room.id, {
+                        event: "timerUpdate",
+                        payload: { taskId:1,countdown },
+                    });
+                    countdown -= 1;
+                } else {
+                    clearInterval(interval);
+                    try {
+                        // Execute the toss after countdown
+                        await GameController.handleTossSocket(room.id, toss_decider_card, wss);
 
+                        // Update room status and handle wallet balance
+                        await Room.updateStatus(room.id, "active");
+                        await Room.deductWalletBalance(room.id, entry_fees);
+                        await Room.setStartTime(room.id);
+
+                        // Clear room timer
+                        Room.clearRoomTimer(room.id);
+                    } catch (error) {
+                        console.error("Error during toss handling:", error);
+                    }
+                }
+            }, 1000);
+        }
         return { success: true, roomId: room.id, players };
     },
 };

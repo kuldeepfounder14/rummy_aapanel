@@ -16,6 +16,7 @@ const initWebSocketServer = (server) => {
                 if (event === "joinRoom") {
                     const { userId, gameId } = payload;
                     const response = await RoomController.joinRoomSocket(userId, gameId, wss, ws);
+                    ws.roomId = response.roomId;
                     // ws.send(JSON.stringify({ event: "joinRoomResponse", payload: response }));
                 } else if (event === "startToss") {
                     const { roomId, tossCardId } = payload;

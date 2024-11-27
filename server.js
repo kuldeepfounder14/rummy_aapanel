@@ -8,7 +8,7 @@ const server = http.createServer(app);
 initWebSocketServer(server);
 
 server.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
+    console.log(`Server running on ${port}`);
 });
 
 app.on('error', (error) => {

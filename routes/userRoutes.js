@@ -8,9 +8,9 @@ router.post('/login', loginUser);
 router.post('/logout', logoutUser);
 router.get('/protected', getProtectedData); 
 router.get("/getallusers", getAllUsers)
-router.post('/changepassword', changePassword);
-router.get('/getme', getMe);
-router.post('/updateuser', updateUser);
+router.post('/change_password', changePassword);
+router.get('/get_profile', getMe);
+router.post('/update_profile', updateUser);
 
 module.exports = router
 

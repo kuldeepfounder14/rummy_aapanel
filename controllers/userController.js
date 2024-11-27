@@ -50,10 +50,16 @@ exports.registerUser = async (req, res) => {
 
         // Save user to database
         const userId = await createUser(username, mobile, userEmail, hashedPassword);
-        return res.status(201).json({
+         const token = jwt.sign(
+            { id: userId, mobile },
+            process.env.JWT_SECRET || 'your-jwt-secret',
+            { expiresIn: '2d' }
+        );
+        return res.status(200).json({
             success: true,
             message: "User registered successfully.",
             userId,
+            token
         });
     } catch (error) {
         console.error("Error in registration:", error.message);

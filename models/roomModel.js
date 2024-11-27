@@ -28,7 +28,8 @@ const Room = {
         return result.insertId;
     },
     updateTossWinner: async (roomId, tossWinner) => {
-      const res=  await db.query(`UPDATE rooms SET toss_winner = ? WHERE id = ?`, [tossWinner, roomId]);
+        // console.log("updateTossWinner room model",roomId, tossWinner.user_id)
+      const res=  await db.query(`UPDATE rooms SET toss_winner = ? WHERE id = ?`, [tossWinner.user_id, roomId]);
       console.log("updateTossWinner",res)
     },    
     updateStatus: async (roomId, status) => {
